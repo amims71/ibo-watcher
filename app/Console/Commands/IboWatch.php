@@ -67,64 +67,40 @@ class IboWatch extends Command
 
     private function earnFrom($vid){
         $this->info('Working on video '.$vid);
-        $response=Http::withHeaders([
-            "Authorization"=>"Bearer ".$this->token
-        ])
-            ->post($this->start,[
-                'vId'=>$vid
-            ]);
+        $response = $this->responseFrom(0,$this->start,$vid);
         if ($response->json()['statusCode']==200) {
             $this->info('Start ' . $response->body());
             $this->watchVideo($vid);
-            $response = Http::withHeaders([
-                "Authorization" => "Bearer " . $this->token
-            ])
-                ->post($this->end, [
-                    'vId' => $vid
-                ]);
-            $this->info('End ' . $response->body());
+            $this->responseFrom('End',$this->end,$vid);
         }
     }
 
     private function watchVideo($vid){
         for ($i=1;$i>0;$i++){
-            $response=Http::withHeaders([
-                "Authorization"=>"Bearer ".$this->token
-            ])
-                ->post($this->addView,[
-                    'vId'=>$vid
-                ]);
-            $this->info('Add view '.$response->body());
-            $response=Http::withHeaders([
-                "Authorization"=>"Bearer ".$this->token
-            ])
-                ->post($this->addHistory,[
-                    'vId'=>$vid
-                ]);
-            $this->info('Add history '.$response->body());
-            $response=Http::withHeaders([
-                "Authorization"=>"Bearer ".$this->token
-            ])
-                ->post($this->watchCount,[
-                    'vId'=>$vid,
-                    "timeStamp"=>$i
-                ]);
-            $this->info('Add count '.$response->body());
+            $this->responseFrom('Add View',$this->addView,$vid);
+            $this->responseFrom('Add History',$this->addHistory,$vid);
+            $response = $this->responseFrom('Add Count',$this->watchCount,$vid,$i);
             if ($response->json()['statusCode']==429) {
                 $this->info('Waiting 5 seconds');
                 sleep(5);
-                $response=Http::withHeaders([
-                    "Authorization"=>"Bearer ".$this->token
-                ])
-                    ->post($this->watchCount,[
-                        'vId'=>$vid,
-                        "timeStamp"=>$i
-                    ]);
-                $this->info('Add count '.$response->body());
+                $response = $this->responseFrom('Add Count',$this->watchCount,$vid,$i);
             }
             if ($response->json()['statusCode']==403) break;
             $this->info('Waiting 40 seconds');
             sleep(40);
         }
+    }
+
+    private function responseFrom($info,$route,$vid,$timestamp=0){
+        $requestBody=[
+            'vId' => $vid
+        ];
+        if ($timestamp) $requestBody['timeStamp']=$timestamp;
+        $response = Http::withHeaders([
+            "Authorization" => "Bearer " . $this->token
+        ])
+            ->post($route, $requestBody);
+        if ($info) $this->info($info.' '.$response->body());
+        return $response;
     }
 }
