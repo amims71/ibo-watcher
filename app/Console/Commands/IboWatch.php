@@ -21,8 +21,6 @@ class IboWatch extends Command
     protected $end='https://www.ibotuber.com/api/user/claimearning';
     protected $homepage='https://www.ibotuber.com/api/public/homepage?vId=';
 
-    protected $vids=[];
-
     /**
      * The console command description.
      *
