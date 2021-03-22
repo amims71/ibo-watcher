@@ -12,7 +12,7 @@ class IboWatch extends Command
      *
      * @var string
      */
-    protected $signature = 'watch:video {vid}';
+    protected $signature = 'watch:video {token} {vid}';
     protected $token;
     protected $start='https://www.ibotuber.com/api/user/watchstart';
     protected $addView='https://www.ibotuber.com/api/public/addViews';
@@ -35,7 +35,6 @@ class IboWatch extends Command
      */
     public function __construct()
     {
-        $this->token=env('IBO_TOKEN','test');
         parent::__construct();
     }
 
@@ -46,13 +45,14 @@ class IboWatch extends Command
      */
     public function handle()
     {
-        $vid="";
+        $vid=$this->argument('vid')==='a'?'':$this->argument('vid');
+        $this->token=$this->argument('token');
         $this->crawler($vid);
     }
 
 
     private function crawler($vid){
-        $this->info('Getting More Videos...');
+        $this->alert('Getting More Videos with '.$vid);
         $response=Http::get($this->homepage,[
                 'vId'=>$vid
             ]);
@@ -66,7 +66,7 @@ class IboWatch extends Command
     }
 
     private function earnFrom($vid){
-        $this->info('Working on video '.$vid);
+        $this->warn('Working on video '.$vid);
         $response = $this->responseFrom(0,$this->start,$vid);
         if ($response->json()['statusCode']==200) {
             $this->info('Start ' . $response->body());
@@ -79,11 +79,11 @@ class IboWatch extends Command
         for ($i=1;$i>0;$i++){
             $this->responseFrom('Add View',$this->addView,$vid);
             $this->responseFrom('Add History',$this->addHistory,$vid);
-            $response = $this->responseFrom('Add Count',$this->watchCount,$vid,$i);
+            $response = $this->responseFrom('Add Count number '.$i,$this->watchCount,$vid,$i);
             if ($response->json()['statusCode']==429) {
                 $this->info('Waiting 5 seconds');
                 sleep(5);
-                $response = $this->responseFrom('Add Count',$this->watchCount,$vid,$i);
+                $response = $this->responseFrom('Add Count number '.$i,$this->watchCount,$vid,$i);
             }
             if ($response->json()['statusCode']==403) break;
             $this->info('Waiting 40 seconds');
@@ -100,7 +100,8 @@ class IboWatch extends Command
             "Authorization" => "Bearer " . $this->token
         ])
             ->post($route, $requestBody);
-        if ($info) $this->info($info.' '.$response->body());
+        if ($info==="End") $this->question($info.' '.$response->body());
+        elseif ($info) $this->info($info.' '.$response->body());
         return $response;
     }
 }
