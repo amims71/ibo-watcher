@@ -46,7 +46,29 @@ class IboWatch extends Command
     public function handle()
     {
         $vid=$this->argument('vid')==='a'?'':$this->argument('vid');
-        $this->token=$this->argument('token');
+        $token=$this->argument('token');
+        switch ($token){
+            case config('ibo.users.a'):
+                $this->token=config('ibo.tokens.a');
+                break;
+            case config('ibo.users.b'):
+                $this->token=config('ibo.tokens.b');
+                break;
+            case config('ibo.users.c'):
+                $this->token=config('ibo.tokens.c');
+                break;
+            case config('ibo.users.d'):
+                $this->token=config('ibo.tokens.d');
+                break;
+            case config('ibo.users.e'):
+                $this->token=config('ibo.tokens.e');
+                break;
+            case config('ibo.users.f'):
+                $this->token=config('ibo.tokens.f');
+                break;
+            default:
+                $this->token=$token;
+        }
         $this->crawler($vid);
     }
 
@@ -76,9 +98,9 @@ class IboWatch extends Command
     }
 
     private function watchVideo($vid){
+        $this->responseFrom('Add View',$this->addView,$vid);
+        $this->responseFrom('Add History',$this->addHistory,$vid);
         for ($i=1;$i>0;$i++){
-            $this->responseFrom('Add View',$this->addView,$vid);
-            $this->responseFrom('Add History',$this->addHistory,$vid);
             $response = $this->responseFrom('Add Count number '.$i,$this->watchCount,$vid,$i);
             if ($response->json()['statusCode']==429) {
                 $this->info('Waiting 5 seconds');
