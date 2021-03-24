@@ -19,6 +19,7 @@ class IboWatch extends Command
     protected $addHistory='https://www.ibotuber.com/api/user/addhistory';
     protected $watchCount='https://www.ibotuber.com/api/user/watchcount';
     protected $end='https://www.ibotuber.com/api/user/claimearning';
+    protected $getbalance='https://www.ibotuber.com/api/user/getbalance';
     protected $homepage='https://www.ibotuber.com/api/public/homepage?vId=';
 
     /**
@@ -94,6 +95,7 @@ class IboWatch extends Command
             $this->info('Start ' . $response->body());
             $this->watchVideo($vid);
             $this->responseFrom('End',$this->end,$vid);
+            $this->responseFrom('Balance',$this->getbalance,$vid);
         }
     }
 
@@ -123,6 +125,7 @@ class IboWatch extends Command
         ])
             ->post($route, $requestBody);
         if ($info==="End") $this->question($info.' '.$response->body());
+        elseif ($info==="Balance") $this->error($info.' '.$response->body());
         elseif ($info) $this->info($info.' '.$response->body());
         return $response;
     }
